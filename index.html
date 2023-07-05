@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Decentralized Voting App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Decentralized Voting App</h1>
+
+    <form id="votingForm">
+        <label for="candidate">Candidate:</label>
+        <input type="text" id="candidate" name="candidate" required>
+        <button type="submit">Vote</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        const votingForm = document.getElementById('votingForm');
+        const resultsDiv = document.getElementById('results');
+
+        const contractAddress = 'CONTRACT_ADDRESS'; // Replace with your actual contract address
+
+        // Function to submit the vote
+        async function vote(event) {
+            event.preventDefault();
+            const candidateInput = document.getElementById('candidate');
+            const candidate = candidateInput.value;
+
+            try {
+                const transaction = await window.aepp.requestAepp('aepp-sdk')
+                    .contractCall({
+                        contractAddress,
+                        functionName: 'vote',
+                        input: { candidate },
+                    });
+                console.log(transaction);
+
+                // Clear the input field
+                candidateInput.value = '';
+                getCandidateVotes(candidate);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Function to get the votes for a candidate
+        async function getCandidateVotes(candidate) {
+            try {
+                const result = await window.aepp.requestAepp('aepp-sdk')
+                    .contractCallStatic({
+                        contractAddress,
+                        functionName: 'getVotes',
+                        input: { candidate },
+                    });
+                console.log(result);
+
+                resultsDiv.innerHTML = `<p>${candidate}: ${result.decodedResult}</p>`;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Event listener for voting form submission
+        votingForm.addEventListener('submit', vote);
+    </script>
+</body>
+</html>
