@@ -1,11 +1,14 @@
-contract VotingApp {
-    mapping(bytes32 => uint256) public votes;
-
-    function vote(bytes32 candidate) external {
-        votes[candidate] += 1;
+contract Marketplace {
+    struct Product {
+        string name;
+        uint256 price;
     }
 
-    function getVotes(bytes32 candidate) external view returns (uint256) {
-        return votes[candidate];
+    mapping(uint256 => Product) public products;
+    uint256 public productCount;
+
+    function createProduct(string memory _name, uint256 _price) external {
+        productCount++;
+        products[productCount] = Product(_name, _price);
     }
 }
