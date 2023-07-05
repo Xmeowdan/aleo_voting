@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Decentralized Voting App</title>
+    <title>Decentralized Marketplace</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -9,64 +9,85 @@
     </style>
 </head>
 <body>
-    <h1>Decentralized Voting App</h1>
+    <h1>Decentralized Marketplace</h1>
 
-    <form id="votingForm">
-        <label for="candidate">Candidate:</label>
-        <input type="text" id="candidate" name="candidate" required>
-        <button type="submit">Vote</button>
+    <form id="createProductForm">
+        <label for="name">Product Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="price">Product Price:</label>
+        <input type="number" id="price" name="price" min="0" required>
+
+        <button type="submit">Create Product</button>
     </form>
 
-    <div id="results"></div>
+    <h2>Products:</h2>
+    <ul id="productList"></ul>
 
     <script>
-        const votingForm = document.getElementById('votingForm');
-        const resultsDiv = document.getElementById('results');
+        const createProductForm = document.getElementById('createProductForm');
+        const productList = document.getElementById('productList');
 
         const contractAddress = 'CONTRACT_ADDRESS'; // Replace with your actual contract address
 
-        // Function to submit the vote
-        async function vote(event) {
+        // Function to create a product
+        async function createProduct(event) {
             event.preventDefault();
-            const candidateInput = document.getElementById('candidate');
-            const candidate = candidateInput.value;
+            const nameInput = document.getElementById('name');
+            const priceInput = document.getElementById('price');
+            const name = nameInput.value;
+            const price = priceInput.value;
 
             try {
                 const transaction = await window.aepp.requestAepp('aepp-sdk')
                     .contractCall({
                         contractAddress,
-                        functionName: 'vote',
-                        input: { candidate },
+                        functionName: 'createProduct',
+                        input: { _name: name, _price: price },
                     });
                 console.log(transaction);
 
-                // Clear the input field
-                candidateInput.value = '';
-                getCandidateVotes(candidate);
+                // Clear the input fields
+                nameInput.value = '';
+                priceInput.value = '';
+                getProductList();
             } catch (error) {
                 console.error(error);
             }
         }
 
-        // Function to get the votes for a candidate
-        async function getCandidateVotes(candidate) {
+        // Function to get the product list
+        async function getProductList() {
             try {
                 const result = await window.aepp.requestAepp('aepp-sdk')
                     .contractCallStatic({
                         contractAddress,
-                        functionName: 'getVotes',
-                        input: { candidate },
+                        functionName: 'productCount',
+                        input: {},
                     });
                 console.log(result);
 
-                resultsDiv.innerHTML = `<p>${candidate}: ${result.decodedResult}</p>`;
+                productList.innerHTML = '';
+                for (let i = 1; i <= result.decodedResult; i++) {
+                    const product = await window.aepp.requestAepp('aepp-sdk')
+                        .contractCallStatic({
+                            contractAddress,
+                            functionName: 'products',
+                            input: { _productId: i },
+                        });
+
+                    productList.innerHTML += `<li>${product.decodedResult.name} - ${product.decodedResult.price} AE</li>`;
+                }
             } catch (error) {
                 console.error(error);
             }
         }
 
-        // Event listener for voting form submission
-        votingForm.addEventListener('submit', vote);
+        // Event listener for product creation form submission
+        createProductForm.addEventListener('submit', createProduct);
+
+        // Initial product list retrieval
+        getProductList();
     </script>
 </body>
 </html>
